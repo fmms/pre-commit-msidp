@@ -10,7 +10,7 @@ setup(
     author_email="mail@felixmoeller.de",
     packages=find_packages("."),
     install_requires=[
-        "rapidfuzz",
+        "lxml",
     ],
     entry_points={
         "console_scripts": [

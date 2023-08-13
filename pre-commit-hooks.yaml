@@ -1,6 +1,6 @@
 -   id: sqlproj-sort
-    name: CRLF end-lines checker
+    name: Fixing the order of files referenced in SSDT solution
     description: "Sort sqlproj file"
     entry: sqlprojsort
     language: python
-    types: [text]
+    files:  \.(sqlproj)$
