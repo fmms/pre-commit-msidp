@@ -1,0 +1,6 @@
+-   id: sqlproj-sort
+    name: CRLF end-lines checker
+    description: "Sort sqlproj file"
+    entry: sqlprojsort
+    language: python
+    types: [text]

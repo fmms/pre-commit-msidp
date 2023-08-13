@@ -1,0 +1,54 @@
+import argparse, sys
+from lxml import etree
+
+def sqlproj_is_unsorted(filename):
+    """
+    with open(filename, mode="rb") as file_checked:
+        for line in file_checked.readlines():
+            if line.endswith(b"\r\n"):
+                return True
+                """
+    return True
+
+def add_slash_before_closing_tag(filename):
+    with open(filename, mode="rb") as file_processed:
+        lines = file_processed.readlines()
+    lines = [line.replace(b"/>", b" />") for line in lines]
+    with open(filename, mode="wb") as file_processed:
+        for line in lines:
+            file_processed.write(line)
+
+def sqlproj_sort(filename):
+    # https://stackoverflow.com/questions/72114455/xml-sorting-with-python
+    # https://stackoverflow.com/questions/46566216/writing-lxml-etree-with-double-quotes-header-attributes
+    root = etree.parse(filename).getroot()
+    ns = { 'x' : "http://schemas.microsoft.com/developer/msbuild/2003" }
+    folders=root.xpath('/x:Project/x:ItemGroup/x:Folder', namespaces=ns)[0].getparent()
+    folders[:] = sorted(folders, key=lambda child: child.xpath('.//@Include', namespaces=ns)[0])
+    builds=root.xpath('/x:Project/x:ItemGroup/x:Build', namespaces=ns)[0].getparent()
+    builds[:] = sorted(builds, key=lambda child: child.xpath('.//@Include', namespaces=ns)[0])
+    with open(filename, 'wb') as f:
+        f.write(etree.tostring(root, doctype='<?xml version="1.0" encoding="utf-8"?>', pretty_print = False))
+
+    # unfortunately lxml does not retain whitespace, thus adding it again to not clutter diffs
+    add_slash_before_closing_tag(filename)
+
+def main(argv=None):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("filenames", nargs="*", help="filenames to check")
+    args = parser.parse_args(argv)
+    unsorted_sqlprojs = [f for f in args.filenames if sqlproj_is_unsorted(f)]
+    for unsorted_sqlproj in unsorted_sqlprojs:
+        print(f"Sort Sqlproj file: {unsorted_sqlproj}")
+        sqlproj_sort(unsorted_sqlproj)
+    if unsorted_sqlprojs:
+        print("")
+        print("SQLProj files have been sorted. Now aborting the commit.")
+        print(
+            'You can check the changes made. Then simply "git add --update ." and re-commit'
+        )
+        return 1
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))  # pragma: no cover
