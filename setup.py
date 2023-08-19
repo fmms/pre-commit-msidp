@@ -5,7 +5,7 @@ setup(
     name="pre-commit-hooks-msidp",
     description="Hooks for the Microsoft Intelligent Data Platform",
     url="https://github.com/fmms/pre-commit-msidp",
-    version="0.0.1",
+    version="0.0.2",
     author="Felix Möller",
     author_email="mail@felixmoeller.de",
     packages=find_packages("."),
@@ -14,7 +14,8 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "sqlprojsort = pre_commit_hooks.sqlprojsort:main"
+            "sqlprojsort = pre_commit_hooks.sqlprojsort:main",
+            "dtprojsort = pre_commit_hooks.dtprojsort:main"
         ],
     },
 )
