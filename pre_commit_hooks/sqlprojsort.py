@@ -41,7 +41,7 @@ def sqlproj_sort(filename):
     builds[:] = sorted(builds, key=lambda child: child.xpath('.//@Include', namespaces=ns)[0])
 
     with open(filename, 'wb') as f:
-        f.write(etree.tostring(root, doctype='<?xml version="1.0" encoding="utf-8"?>', pretty_print = False))
+        f.write(etree.tostring(root, doctype='<?xml version="1.0" encoding="utf-8"?>', encoding='utf-8', pretty_print = False))
 
     # unfortunately lxml does not retain whitespace, thus adding it again to not clutter diffs
     fix_unintended_lxml_file_modifications(filename)
@@ -52,11 +52,11 @@ def main(argv=None):
     args = parser.parse_args(argv)
     unsorted_sqlprojs = [f for f in args.filenames if f.endswith('.sqlproj') and sqlproj_is_unsorted(f)]
     for unsorted_sqlproj in unsorted_sqlprojs:
-        print(f"Sort Sqlproj file: {unsorted_sqlproj}")
+        print(f"Sort .sqlproj file: {unsorted_sqlproj}")
         sqlproj_sort(unsorted_sqlproj)
     if unsorted_sqlprojs:
         print("")
-        print("SQLProj files have been sorted. Now aborting the commit.")
+        print(".sqlproj files have been sorted. Now aborting the commit.")
         print(
             'You can check the changes made. Then simply "git add --update ." and re-commit'
         )
