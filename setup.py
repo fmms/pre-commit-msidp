@@ -5,7 +5,7 @@ setup(
     name="pre-commit-hooks-msidp",
     description="Hooks for the Microsoft Intelligent Data Platform",
     url="https://github.com/fmms/pre-commit-msidp",
-    version="0.0.2",
+    version="0.0.5",
     author="Felix Möller",
     author_email="mail@felixmoeller.de",
     packages=find_packages("."),
