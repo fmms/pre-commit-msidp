@@ -1,6 +1,9 @@
 import argparse, sys
 import json
 
+def tabular_editor_sort(e):
+    return e.casefold().replace("-", "")
+
 def sort_bim_json (jsonObject):
     changed = False
     if "model" in jsonObject.keys():
@@ -8,7 +11,7 @@ def sort_bim_json (jsonObject):
         if "dataSources" in jsonObject["model"]:
             print ("sorting datasources")
             before = [ds["name"] for ds in jsonObject["model"]["dataSources"]]
-            jsonObject["model"]["dataSources"] = sorted(jsonObject["model"]["dataSources"], key = lambda e: e["name"])
+            jsonObject["model"]["dataSources"] = sorted(jsonObject["model"]["dataSources"], key = lambda e: tabular_editor_sort(e["name"]))
             after = [ds["name"] for ds in jsonObject["model"]["dataSources"]]
             if (before != after):
                 print("changed from", before, "to", after, ".")
@@ -16,19 +19,24 @@ def sort_bim_json (jsonObject):
         if "tables" in jsonObject["model"]:
             print ("sorting tables")
             before = [ds["name"] for ds in jsonObject["model"]["tables"]]
-            jsonObject["model"]["tables"] = sorted(jsonObject["model"]["tables"], key = lambda e: e["name"])
+            jsonObject["model"]["tables"] = sorted(jsonObject["model"]["tables"], key = lambda e: tabular_editor_sort(e["name"]))
             after = [ds["name"] for ds in jsonObject["model"]["tables"]]
             if (before != after):
                 print("changed from", before, "to", after, ".")
                 changed = True
             for t in jsonObject["model"]["tables"]:
-                 if "columns" in t.keys() and False: # do not sort columns for now, this is not done by Tabular Editor either
+                 if "columns" in t.keys():
                     print ("sorting columns of", t["name"])
-                    t["columns"]= sorted(t["columns"], key = lambda e: e["name"])
+                    before = [ds["name"] for ds in t["columns"]]
+                    t["columns"]= sorted(t["columns"], key = lambda e: tabular_editor_sort(e["name"]) + ".json")
+                    after = [ds["name"] for ds in t["columns"]]
+                    if (before != after):
+                        print("changed from", before, "to", after, ".")
+                        changed = True
         if "relationships" in jsonObject["model"]:
             print ("sorting relationships")
             before = [ds["name"] for ds in jsonObject["model"]["relationships"]]
-            jsonObject["model"]["relationships"] = sorted(jsonObject["model"]["relationships"], key = lambda e: e["name"])
+            jsonObject["model"]["relationships"] = sorted(jsonObject["model"]["relationships"], key = lambda e: tabular_editor_sort(e["name"]))
             after = [ds["name"] for ds in jsonObject["model"]["relationships"]]
             if (before != after):
                 print("changed from", before, "to", after, ".")
@@ -36,7 +44,7 @@ def sort_bim_json (jsonObject):
         if "roles" in jsonObject["model"]:
             print ("sorting roles")
             before = [ds["name"] for ds in jsonObject["model"]["roles"]]
-            jsonObject["model"]["roles"] = sorted(jsonObject["model"]["roles"], key = lambda e: e["name"])
+            jsonObject["model"]["roles"] = sorted(jsonObject["model"]["roles"], key = lambda e: tabular_editor_sort(e["name"]))
             after = [ds["name"] for ds in jsonObject["model"]["roles"]]
             if (before != after):
                 print("changed from", before, "to", after, ".")
