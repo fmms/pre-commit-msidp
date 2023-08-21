@@ -2,7 +2,26 @@ import argparse, sys
 import json
 
 def tabular_editor_sort(e):
-    return e.casefold().replace("-", "")
+    # tables (_ after chars)
+    # dim_CompanyCode < 
+    # dim_CompanyCodeSubgroup <
+    # dim_CompanyCode_Partner < 
+    # dim_Company_Partner
+    # columns (_ before chars)
+    # Currency_ID <
+    # CurrencyScope_ID
+    return e.casefold().replace("-", "").replace("_", "{") + "!"
+
+def tabular_editor_sort_columns(e):
+    # tables (_ after chars)
+    # dim_CompanyCode < 
+    # dim_CompanyCodeSubgroup <
+    # dim_CompanyCode_Partner < 
+    # dim_Company_Partner
+    # columns (_ before chars)
+    # Currency_ID <
+    # CurrencyScope_ID
+    return e.casefold().replace("-", "").replace("_", "/") + "!"
 
 def sort_bim_json (jsonObject):
     changed = False
@@ -28,7 +47,7 @@ def sort_bim_json (jsonObject):
                  if "columns" in t.keys():
                     print ("sorting columns of", t["name"])
                     before = [ds["name"] for ds in t["columns"]]
-                    t["columns"]= sorted(t["columns"], key = lambda e: tabular_editor_sort(e["name"]) + ".json")
+                    t["columns"]= sorted(t["columns"], key = lambda e: tabular_editor_sort_columns(e["name"]))
                     after = [ds["name"] for ds in t["columns"]]
                     if (before != after):
                         print("changed from", before, "to", after, ".")
