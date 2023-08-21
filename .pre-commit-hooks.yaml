@@ -1,12 +1,18 @@
 -   id: sqlproj-sort
-    name: Fixing the order of files referenced in SSDT-SSDT project
+    name: Sorting the files referenced in SSDT-SSDT project
     description: "Sort sqlproj file"
     entry: sqlprojsort
     language: python
     files:  \.(sqlproj)$
 -   id: dtproj-sort
-    name: Fixing the order of files referenced in SSDT-SSIS project
+    name: Sorting the files referenced in SSDT-SSIS project
     description: "Sort dtproj file"
     entry: dtprojsort
     language: python
     files:  \.(dtproj)$
+-   id: dtproj-sort
+    name: Sorting the datasources, tables, relationships etc in Model.bim
+    description: "Sort dtproj file"
+    entry: bimjsort
+    language: python
+    files:  \.(bim)$

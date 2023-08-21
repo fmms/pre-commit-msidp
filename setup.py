@@ -15,7 +15,8 @@ setup(
     entry_points={
         "console_scripts": [
             "sqlprojsort = pre_commit_hooks.sqlprojsort:main",
-            "dtprojsort = pre_commit_hooks.dtprojsort:main"
+            "dtprojsort = pre_commit_hooks.dtprojsort:main",
+            "bimsort = pre_commit_hooks.bimsort:main"
         ],
     },
 )
