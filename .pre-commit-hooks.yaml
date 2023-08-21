@@ -13,6 +13,6 @@
 -   id: bim-sort
     name: Sorting the datasources, tables, relationships etc in Model.bim
     description: "Sort dtproj file"
-    entry: bimjsort
+    entry: bimsort
     language: python
     files:  \.(bim)$
