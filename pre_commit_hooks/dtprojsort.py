@@ -32,7 +32,8 @@ def fix_unintended_lxml_file_modifications(filename):
 def dtproj_sort(filename):
     # https://stackoverflow.com/questions/72114455/xml-sorting-with-python
     # https://stackoverflow.com/questions/46566216/writing-lxml-etree-with-double-quotes-header-attributes
-    root = etree.parse(filename).getroot()
+    parser = etree.XMLParser(remove_blank_text=True)
+    root = etree.parse(filename, parser).getroot()
     ns = { 'SSIS' : "www.microsoft.com/SqlServer/SSIS" }
     packages=root.xpath('//SSIS:Project/SSIS:Packages', namespaces=ns)[0]
     packages[:] = sorted(packages, key=lambda child: child.xpath('.//@SSIS:Name', namespaces=ns)[0])
@@ -40,7 +41,7 @@ def dtproj_sort(filename):
     package_meta_data[:] = sorted(package_meta_data, key=lambda child: child.xpath('.//@SSIS:Name', namespaces=ns)[0])
 
     with open(filename, 'wb') as f:
-        f.write(etree.tostring(root, doctype='<?xml version="1.0" encoding="utf-8"?>', encoding='utf-8', pretty_print = False))
+        f.write(etree.tostring(root, doctype='<?xml version="1.0" encoding="utf-8"?>', encoding='utf-8', pretty_print = True))
 
     # unfortunately lxml does not retain whitespace, thus adding it again to not clutter diffs
     fix_unintended_lxml_file_modifications(filename)

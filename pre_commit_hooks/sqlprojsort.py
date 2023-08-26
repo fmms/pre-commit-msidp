@@ -33,7 +33,8 @@ def fix_unintended_lxml_file_modifications(filename):
 def sqlproj_sort(filename):
     # https://stackoverflow.com/questions/72114455/xml-sorting-with-python
     # https://stackoverflow.com/questions/46566216/writing-lxml-etree-with-double-quotes-header-attributes
-    root = etree.parse(filename).getroot()
+    parser = etree.XMLParser(remove_blank_text=True)
+    root = etree.parse(filename, parser).getroot()
     ns = { 'x' : "http://schemas.microsoft.com/developer/msbuild/2003" }
     folders=root.xpath('/x:Project/x:ItemGroup/x:Folder', namespaces=ns)[0].getparent()
     folders[:] = sorted(folders, key=lambda child: child.xpath('.//@Include', namespaces=ns)[0])
@@ -41,7 +42,7 @@ def sqlproj_sort(filename):
     builds[:] = sorted(builds, key=lambda child: child.xpath('.//@Include', namespaces=ns)[0])
 
     with open(filename, 'wb') as f:
-        f.write(etree.tostring(root, doctype='<?xml version="1.0" encoding="utf-8"?>', encoding='utf-8', pretty_print = False))
+        f.write(etree.tostring(root, doctype='<?xml version="1.0" encoding="utf-8"?>', encoding='utf-8', pretty_print = True))
 
     # unfortunately lxml does not retain whitespace, thus adding it again to not clutter diffs
     fix_unintended_lxml_file_modifications(filename)
