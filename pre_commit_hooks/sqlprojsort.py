@@ -1,23 +1,34 @@
-import argparse, sys
+import argparse
+import sys
+import os
 from lxml import etree
-import pickle
+
 
 def sqlproj_is_unsorted(filename):
     root = etree.parse(filename).getroot()
-    ns = { 'x' : "http://schemas.microsoft.com/developer/msbuild/2003" }
+    ns = {'x': "http://schemas.microsoft.com/developer/msbuild/2003"}
     # folders
-    listOfFolderIncludes_before=root.xpath('/x:Project/x:ItemGroup/x:Folder/@Include', namespaces=ns)
-    folders=root.xpath('/x:Project/x:ItemGroup/x:Folder', namespaces=ns)[0].getparent()
-    folders[:] = sorted(folders, key=lambda child: child.xpath('.//@Include', namespaces=ns)[0])
-    listOfFolderIncludes_after=root.xpath('/x:Project/x:ItemGroup/x:Folder/@Include', namespaces=ns)
+    listOfFolderIncludes_before = root.xpath(
+        '/x:Project/x:ItemGroup/x:Folder/@Include', namespaces=ns)
+    folders = root.xpath('/x:Project/x:ItemGroup/x:Folder',
+                         namespaces=ns)[0].getparent()
+    folders[:] = sorted(folders, key=lambda child: child.xpath(
+        './/@Include', namespaces=ns)[0])
+    listOfFolderIncludes_after = root.xpath(
+        '/x:Project/x:ItemGroup/x:Folder/@Include', namespaces=ns)
 
     # builds
-    listOfBuildIncludes_before=root.xpath('/x:Project/x:ItemGroup/x:Build/@Include', namespaces=ns)
-    builds=root.xpath('/x:Project/x:ItemGroup/x:Build', namespaces=ns)[0].getparent()
-    builds[:] = sorted(builds, key=lambda child: child.xpath('.//@Include', namespaces=ns)[0])
-    listOfBuildIncludes_after=root.xpath('/x:Project/x:ItemGroup/x:Build/@Include', namespaces=ns)
+    listOfBuildIncludes_before = root.xpath(
+        '/x:Project/x:ItemGroup/x:Build/@Include', namespaces=ns)
+    builds = root.xpath('/x:Project/x:ItemGroup/x:Build',
+                        namespaces=ns)[0].getparent()
+    builds[:] = sorted(builds, key=lambda child: child.xpath(
+        './/@Include', namespaces=ns)[0])
+    listOfBuildIncludes_after = root.xpath(
+        '/x:Project/x:ItemGroup/x:Build/@Include', namespaces=ns)
 
-    return not(listOfFolderIncludes_after == listOfFolderIncludes_before and listOfBuildIncludes_after == listOfBuildIncludes_before)
+    return not (listOfFolderIncludes_after == listOfFolderIncludes_before and listOfBuildIncludes_after == listOfBuildIncludes_before)
+
 
 def fix_unintended_lxml_file_modifications(filename):
     LF = b'\n'
@@ -29,29 +40,44 @@ def fix_unintended_lxml_file_modifications(filename):
     with open(filename, mode="wb") as file_processed:
         for line in lines:
             file_processed.write(line)
+    # remove the trailing line break, visual studio does write files without linebreak in last line...
+    with open(filename, 'r+') as f:
+        f.seek(0, 2)
+        f.seek(f.tell() - len(os.linesep))
+        last_char = f.read()
+        if last_char == '\n':
+            f.truncate(f.tell() - len(os.linesep))
+
 
 def sqlproj_sort(filename):
     # https://stackoverflow.com/questions/72114455/xml-sorting-with-python
     # https://stackoverflow.com/questions/46566216/writing-lxml-etree-with-double-quotes-header-attributes
     parser = etree.XMLParser(remove_blank_text=True)
     root = etree.parse(filename, parser).getroot()
-    ns = { 'x' : "http://schemas.microsoft.com/developer/msbuild/2003" }
-    folders=root.xpath('/x:Project/x:ItemGroup/x:Folder', namespaces=ns)[0].getparent()
-    folders[:] = sorted(folders, key=lambda child: child.xpath('.//@Include', namespaces=ns)[0])
-    builds=root.xpath('/x:Project/x:ItemGroup/x:Build', namespaces=ns)[0].getparent()
-    builds[:] = sorted(builds, key=lambda child: child.xpath('.//@Include', namespaces=ns)[0])
+    ns = {'x': "http://schemas.microsoft.com/developer/msbuild/2003"}
+    folders = root.xpath('/x:Project/x:ItemGroup/x:Folder',
+                         namespaces=ns)[0].getparent()
+    folders[:] = sorted(folders, key=lambda child: child.xpath(
+        './/@Include', namespaces=ns)[0])
+    builds = root.xpath('/x:Project/x:ItemGroup/x:Build',
+                        namespaces=ns)[0].getparent()
+    builds[:] = sorted(builds, key=lambda child: child.xpath(
+        './/@Include', namespaces=ns)[0])
 
     with open(filename, 'wb') as f:
-        f.write(etree.tostring(root, doctype='<?xml version="1.0" encoding="utf-8"?>', encoding='utf-8', pretty_print = True))
+        f.write(etree.tostring(root, doctype='<?xml version="1.0" encoding="utf-8"?>',
+                encoding='utf-8', pretty_print=True))
 
     # unfortunately lxml does not retain whitespace, thus adding it again to not clutter diffs
     fix_unintended_lxml_file_modifications(filename)
+
 
 def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("filenames", nargs="*", help="filenames to check")
     args = parser.parse_args(argv)
-    unsorted_sqlprojs = [f for f in args.filenames if f.endswith('.sqlproj') and sqlproj_is_unsorted(f)]
+    unsorted_sqlprojs = [f for f in args.filenames if f.endswith(
+        '.sqlproj') and sqlproj_is_unsorted(f)]
     for unsorted_sqlproj in unsorted_sqlprojs:
         print(f"Sort .sqlproj file: {unsorted_sqlproj}")
         sqlproj_sort(unsorted_sqlproj)
@@ -63,6 +89,7 @@ def main(argv=None):
         )
         return 1
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))  # pragma: no cover

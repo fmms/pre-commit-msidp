@@ -1,22 +1,32 @@
-import argparse, sys
+import argparse
+import sys
 from lxml import etree
-import pickle
+import os
+
 
 def dtproj_is_unsorted(filename):
     root = etree.parse(filename).getroot()
-    ns = { 'SSIS' : "www.microsoft.com/SqlServer/SSIS" }
+    ns = {'SSIS': "www.microsoft.com/SqlServer/SSIS"}
     # packages
-    listOfPackageNames_before=root.xpath('//SSIS:Project/SSIS:Packages/SSIS:Package/@SSIS:Name', namespaces=ns)
-    packages=root.xpath('//SSIS:Project/SSIS:Packages', namespaces=ns)[0]
-    packages[:] = sorted(packages, key=lambda child: child.xpath('.//@SSIS:Name', namespaces=ns)[0])
-    listOfPackageNames_after=root.xpath('//SSIS:Project/SSIS:Packages/SSIS:Package/@SSIS:Name', namespaces=ns)
+    listOfPackageNames_before = root.xpath(
+        '//SSIS:Project/SSIS:Packages/SSIS:Package/@SSIS:Name', namespaces=ns)
+    packages = root.xpath('//SSIS:Project/SSIS:Packages', namespaces=ns)[0]
+    packages[:] = sorted(packages, key=lambda child: child.xpath(
+        './/@SSIS:Name', namespaces=ns)[0])
+    listOfPackageNames_after = root.xpath(
+        '//SSIS:Project/SSIS:Packages/SSIS:Package/@SSIS:Name', namespaces=ns)
 
     # package_meta_data
-    listOfPackageMetadata_before=root.xpath('//SSIS:Project/SSIS:DeploymentInfo/SSIS:PackageInfo/SSIS:PackageMetaData/@SSIS:Name', namespaces=ns)
-    package_meta_data=root.xpath('//SSIS:Project/SSIS:DeploymentInfo/SSIS:PackageInfo', namespaces=ns)[0]
-    package_meta_data[:] = sorted(package_meta_data, key=lambda child: child.xpath('.//@SSIS:Name', namespaces=ns)[0])
-    listOfPackageMetadata_after=root.xpath('//SSIS:Project/SSIS:DeploymentInfo/SSIS:PackageInfo/SSIS:PackageMetaData/@SSIS:Name', namespaces=ns)
-    return not(listOfPackageNames_after == listOfPackageNames_before and listOfPackageMetadata_after == listOfPackageMetadata_before)
+    listOfPackageMetadata_before = root.xpath(
+        '//SSIS:Project/SSIS:DeploymentInfo/SSIS:PackageInfo/SSIS:PackageMetaData/@SSIS:Name', namespaces=ns)
+    package_meta_data = root.xpath(
+        '//SSIS:Project/SSIS:DeploymentInfo/SSIS:PackageInfo', namespaces=ns)[0]
+    package_meta_data[:] = sorted(package_meta_data, key=lambda child: child.xpath(
+        './/@SSIS:Name', namespaces=ns)[0])
+    listOfPackageMetadata_after = root.xpath(
+        '//SSIS:Project/SSIS:DeploymentInfo/SSIS:PackageInfo/SSIS:PackageMetaData/@SSIS:Name', namespaces=ns)
+    return not (listOfPackageNames_after == listOfPackageNames_before and listOfPackageMetadata_after == listOfPackageMetadata_before)
+
 
 def fix_unintended_lxml_file_modifications(filename):
     LF = b'\n'
@@ -28,29 +38,43 @@ def fix_unintended_lxml_file_modifications(filename):
     with open(filename, mode="wb") as file_processed:
         for line in lines:
             file_processed.write(line)
+    # remove the trailing line break, visual studio does write files without linebreak in last line...
+    with open(filename, 'r+') as f:
+        f.seek(0, 2)
+        f.seek(f.tell() - len(os.linesep))
+        last_char = f.read()
+        if last_char == '\n':
+            f.truncate(f.tell() - len(os.linesep))
+
 
 def dtproj_sort(filename):
     # https://stackoverflow.com/questions/72114455/xml-sorting-with-python
     # https://stackoverflow.com/questions/46566216/writing-lxml-etree-with-double-quotes-header-attributes
     parser = etree.XMLParser(remove_blank_text=True)
     root = etree.parse(filename, parser).getroot()
-    ns = { 'SSIS' : "www.microsoft.com/SqlServer/SSIS" }
-    packages=root.xpath('//SSIS:Project/SSIS:Packages', namespaces=ns)[0]
-    packages[:] = sorted(packages, key=lambda child: child.xpath('.//@SSIS:Name', namespaces=ns)[0])
-    package_meta_data=root.xpath('//SSIS:Project/SSIS:DeploymentInfo/SSIS:PackageInfo', namespaces=ns)[0]
-    package_meta_data[:] = sorted(package_meta_data, key=lambda child: child.xpath('.//@SSIS:Name', namespaces=ns)[0])
+    ns = {'SSIS': "www.microsoft.com/SqlServer/SSIS"}
+    packages = root.xpath('//SSIS:Project/SSIS:Packages', namespaces=ns)[0]
+    packages[:] = sorted(packages, key=lambda child: child.xpath(
+        './/@SSIS:Name', namespaces=ns)[0])
+    package_meta_data = root.xpath(
+        '//SSIS:Project/SSIS:DeploymentInfo/SSIS:PackageInfo', namespaces=ns)[0]
+    package_meta_data[:] = sorted(package_meta_data, key=lambda child: child.xpath(
+        './/@SSIS:Name', namespaces=ns)[0])
 
     with open(filename, 'wb') as f:
-        f.write(etree.tostring(root, doctype='<?xml version="1.0" encoding="utf-8"?>', encoding='utf-8', pretty_print = True))
+        f.write(etree.tostring(root, doctype='<?xml version="1.0" encoding="utf-8"?>',
+                encoding='utf-8', pretty_print=True))
 
     # unfortunately lxml does not retain whitespace, thus adding it again to not clutter diffs
     fix_unintended_lxml_file_modifications(filename)
+
 
 def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("filenames", nargs="*", help="filenames to check")
     args = parser.parse_args(argv)
-    unsorted_dtprojs = [f for f in args.filenames if f.endswith('.dtproj') and dtproj_is_unsorted(f)]
+    unsorted_dtprojs = [f for f in args.filenames if f.endswith(
+        '.dtproj') and dtproj_is_unsorted(f)]
     for unsorted_dtproj in unsorted_dtprojs:
         print(f"Sort .dtproj file: {unsorted_dtproj}")
         dtproj_sort(unsorted_dtproj)
@@ -62,6 +86,7 @@ def main(argv=None):
         )
         return 1
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))  # pragma: no cover
