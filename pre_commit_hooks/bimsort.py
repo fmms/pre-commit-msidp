@@ -52,6 +52,17 @@ def sort_bim_json (jsonObject):
                     if (before != after):
                         print("changed from", before, "to", after, ".")
                         changed = True
+                 if "measures" in t.keys():
+                    print("sorting measures of", t["name"])
+                    before = [ds["name"] for ds in t["measures"]]
+                    t["measures"] = sorted(
+                        t["measures"],
+                        key=lambda e: tabular_editor_sort(e["name"])
+                    )
+                    after = [ds["name"] for ds in t["measures"]]
+                    if before != after:
+                        print("changed from", before, "to", after, ".")
+                        changed = True
         if "relationships" in jsonObject["model"]:
             print ("sorting relationships")
             before = [ds["name"] for ds in jsonObject["model"]["relationships"]]
